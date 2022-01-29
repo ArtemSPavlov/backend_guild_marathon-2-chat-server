@@ -26,7 +26,7 @@ function connectionListener(socket: Socket): void {
     if (!roomName){
       roomName = message;
       socket.write("Enter nickname >");
-    } else {
+    } else if (!nickName){
       nickName = message;
 
       ChatRoom.start(roomName, socket, nickName);

@@ -26,7 +26,17 @@ export default class ChatRoom {
 
   public push(connection: Socket, nickName: string): void{
     this.connections.set(connection, {nickName});
+    this.setListeners(connection);
     this.sendMessage(`%%${this.name}%%`, `user "${nickName}" connected`);
+  }
+
+  private setListeners(connection: Socket): void{
+    connection.on("data", data => this.dataListener(data, connection));
+  }
+
+  private dataListener(data: Buffer, connection: Socket): void{
+    const { nickName } = this.connections.get(connection);
+    this.sendMessage(nickName, data.toString());
   }
 
   private sendMessage(author: string, text: string): string{
