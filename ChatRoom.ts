@@ -1,15 +1,40 @@
 import { Socket } from "net";
 
 export default class ChatRoom {
-  private static readonly rooms: Map<string, ChatRoom> = new Map<string, ChatRoom>();
+  private static readonly rooms: Map<string, ChatRoom> = new Map();
   public readonly name: string;
-  private connections: Map<Socket, ConnectionMetaData> = new Map<Socket, ConnectionMetaData>();
+  private connections: Map<Socket, ConnectionMetaData> = new Map();
   private readonly messages: string[] = [];
-  private readonly commands: [] = []
+  private readonly commands: Map<string, ChatCommand> = new Map([
+    [
+      "/history",
+      this.getHistory.bind(this)
+    ],
+    [
+      "/users",
+      this.getNickNames.bind(this)
+    ]
+  ])
 
   private constructor(name: string){
     this.name = name;
     this.sendMessage(`%%${this.name}%%`, `room "${this.name}" created`);
+  }
+
+  private sendMessage(author: string, text: string): string{
+    const time = ChatRoom.getCurrentTime();
+    const message = `${author} [${time}]: ${text}`;
+
+    const sockets = Array.from(this.connections.keys());
+    sockets.forEach(socket => socket.write(message));
+
+    this.messages.push(message);
+    return message;
+  }
+
+  private static getCurrentTime(): string{
+    const currentDate = new Date();
+    return `${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`;
   }
 
   public static start(roomName: string, firstConnection: Socket, nickName: string): void{
@@ -35,27 +60,34 @@ export default class ChatRoom {
   }
 
   private dataListener(data: Buffer, connection: Socket): void{
-    const { nickName } = this.connections.get(connection);
-    this.sendMessage(nickName, data.toString());
+    const message: string = data.toString("utf8");
+    const command = this.commands.get(message);
+
+    if(command){
+      connection.write(command());
+    } else {
+      const { nickName } = this.connections.get(connection);
+      this.sendMessage(nickName, data.toString());
+    }
   }
 
-  private sendMessage(author: string, text: string): string{
-    const time = ChatRoom.getCurrentTime();
-    const message = `${author} [${time}]: ${text}`;
-
-    const sockets = Array.from(this.connections.keys());
-    sockets.forEach(socket => socket.write(message));
-
-    this.messages.push(message);
-    return message;
+  private getHistory(): string{
+    const TITLE = "\n ----- HISTORY -----\n";
+    return `${TITLE}${this.messages.join("\n")}${TITLE}`;
   }
 
-  private static getCurrentTime(): string{
-    const currentDate = new Date();
-    return `${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`;
+  private getNickNames(): string{
+    const TITLE = "\n ----- USERS -----\n";
+    const nickNames = Array
+      .from(this.connections.values())
+      .map(({nickName}) => nickName);
+
+    return `${TITLE}${nickNames.join("\n")}${TITLE}`;
   }
 }
 
 type ConnectionMetaData = {
   nickName: string
 }
+
+type ChatCommand = () => string;
