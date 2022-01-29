@@ -1,0 +1,15 @@
+{
+  "name": "backend_guild_maraphon-chat_server",
+  "version": "1.0.0",
+  "author": "Kangaroo",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^17.0.2",
+    "typescript": "^4.5.4"
+  },
+  "scripts": {
+    "prestart": "tsc index.ts --outDir dist",
+    "start": "node dist/index.js"
+  }
+}
