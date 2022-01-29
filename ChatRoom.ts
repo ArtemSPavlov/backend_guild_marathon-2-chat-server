@@ -69,9 +69,9 @@ export default class ChatRoom {
   private endListener(connection: Socket){
     const { nickName } = this.connections.get(connection);
 
+    connection.removeAllListeners();
     this.sendMessage(`%%${this.name}%%`, `User "${nickName}" disconnected`);
     this.connections.delete(connection);
-    console.log({connection});
 
     if (!this.connections.size) ChatRoom.close(this.name);
   }
