@@ -24,7 +24,7 @@ function connectionListener(socket: Socket): void {
     const message: string = data.toString("utf8");
 
     if (!roomName){
-      roomName = message;
+      roomName = message.trim();
       socket.write("Enter nickname >");
     } else if (!nickName){
       nickName = message;
