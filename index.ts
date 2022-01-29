@@ -2,6 +2,7 @@ import * as net from "net";
 import { Socket } from "net";
 
 import { port } from "./config";
+import ChatRoom from "./ChatRoom";
 
 const server = net
   .createServer(connectionListener)
@@ -19,7 +20,7 @@ function connectionListener(socket: Socket): void {
   let roomName: string;
   let nickName: string;
 
-  socket.on("data", data => {
+  socket.on("data", function dataListener(data) {
     const message: string = data.toString("utf8");
 
     if (!roomName){
@@ -28,9 +29,9 @@ function connectionListener(socket: Socket): void {
     } else {
       nickName = message;
 
-      console.log(`Connect to room "${roomName}" with nickname "${nickName}"`);
+      ChatRoom.start(roomName, socket, nickName);
 
-      server.removeListener("connection", connectionListener);
+      socket.removeListener("data", dataListener);
     }
   })
 }
