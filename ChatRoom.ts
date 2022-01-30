@@ -51,6 +51,7 @@ export default class ChatRoom {
   private setListeners(connection: Socket): void{
     connection.on("data", data => this.dataListener(data, connection));
     connection.on("end", () => this.endListener(connection));
+    connection.on("error", () => this.endListener(connection));
   }
 
   private dataListener(data: Buffer, connection: Socket): void{
@@ -80,9 +81,11 @@ export default class ChatRoom {
     this.rooms.delete(roomName);
   }
 
+  private errorHandler(connections: Socket): void{}
+
   private sendMessage(author: string, text: string): string{
     const time = ChatRoom.getCurrentTime();
-    const message = `${author} [${time}]: ${text}`;
+    const message = `[${time}] ${author}: ${text}`;
     const sockets = Array.from(this.connections.keys());
 
     sockets.forEach(socket => socket.write(message));
